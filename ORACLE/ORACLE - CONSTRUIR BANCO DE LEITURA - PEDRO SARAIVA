@@ -1,0 +1,68 @@
+pré requisitos:
+
+ - Copiar PFILE.
+ - Adequar PFILE.
+ - Criar diretórios utilizados no PFILE e por CONTROLFILEs, DATAFILEs, TEMPFILEs, e REDO LOGs
+
+========================
+--CONSTRUIR BANCO DE LEITURA
+========================
+
+   -- BANCO PRINCIPAL 
+$ rlwrap / as sysdba
+RMAN> BACKUP DATABASE;
+
+--STARTUP NOMOUNT NO BANCO DESTINO
+$ rlwrap / as sysdba
+RMAN> startup nomount;
+
+-- RESTORE DO CONTROLFILE TIRADO DO BANCO DE PRINCIPAL NO BANCO DESTINO.
+$ rlwrap rman target /
+RMAN> RESTORE CONTROLFILE FROM '/backup/fast_recovery_area/dbteste/rman/ControlFile_level0_principal.bkp';
+
+
+-- ALTERAR O BANCO DESTINO PARA MODO MOUNT 
+$ rlwrap rman target /
+RMAN> alter database mount;
+
+
+-- CATALOGS O BACKUP TIRADO DO BANCO DO PRINCIPAL NA PASTA QUE ESTAO OS ARQUIVOS BKP.
+$ rlwrap rman target /
+RMAN> CATALOG START WITH '/backup/fast_recovery_area/dbteste/rman/';
+
+-- RESTORE NO BANCO DESTINO
+$ rlwrap rman target /
+RMAN> RESTORE DATABASE;
+
+-- RECOVER NO BANCO DESTINO, DEPOIS DO TERMINO DO RECOVER, TENTAR SUBIR O BANCO EM OPEN READ ONLY
+ $ rlwrap rman target / 
+RMAN> RECOVER DATABASE;
+
+
+--- BANCO PRINCIPAL; GERAR O BACKUP DO CONTROLFILE EM MODO STANDBY,COPIAR O ARQUIVO PARA O BANCO DESTINO E FAZER O APONTAMENTO DELE NO PFILE QUE SERA USADO PARA SUBIR O BANCO DESTINO
+ $ rlwrap sqlplus / as sysdba
+ SQL> ALTER DATABASE CREATE STANDBY CONTROLFILE AS '/home/oracle/scripts/controlstandby.ctl';
+
+
+--- BANCO PRINCIPAL; GERAR UNS 3 ARCHIVES
+ $ rlwrap sqlplus / as sysdba
+ SQL>  ALTER SYSTEM SWITCH LOGFILE;
+
+-- VERIFICA ONDE FORAM GERADOS OS ARCHIVES E COPIAR VIA SCP PARA BANCO DESTINO
+ $ rlwrap sqlplus / as sysdba
+ SQL> SELECT SEQUENCE#,NAME FROM v$archived_log ORDER BY SEQUENCE# DESC;
+
+
+
+---BANCO DESTINO, SUBIR O BANCO EM MODO MOUNT USANDO O CONTROLFILE STANDBY GERADO NO BANCO PRINCIPAL
+$ rlwrap sqlplus / as sysdba
+SQL> STARTUP MOUNT;
+
+--RECOVER DOS ARCHIVES GERADOS NO BANCO PRINCIPAL NO DESTINO 
+$ rlwrap sqlplus / as sysdba
+SQL>set autorecovery on
+SQL> recover standby database using backup controlfile until cancel;
+
+-- BANCO DESTINO, ABRIR O BANCO DESTINO EM READ ONLY, PARA CONSEGUIR FICAR ATUALIZANDO COM FUTUROS ARCHIVES QUE FOREM SENDO GERADOS NO BANCO PRINCIPAL
+$ rlwrap sqlplus / as sysdba
+SQL> ALTER DATABASE OPEN READ ONLY;

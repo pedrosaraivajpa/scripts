@@ -1,0 +1,88 @@
+
+============================================
+  -- PRIMEIRA PARTE
+  -- PROMOVENDO O BANCO DESTINO(DR) COMO BANCO PRIMARIO E BANCO PRINCIPAL(PRODUCAO) COMO DR
+============================================
+
+--gerar alguns archives e fazer o shutdown no banco Principal(PRODUCAO)
+$ rlwrap sqlplus / as sysdba
+SQL> alter system swicth logfile;
+SQL> shutdown immediate;
+
+--copiar os archives gerados no banco Principal(PRODUCAO) e enviar para o destino(DR)
+$ scp  -P 22 /u01/app/oracle/product/12.2.0.1/db_1/dbs/archive/1_10* oracle@192.168.33.11:/u01/app/oracle/product/12.2.0.1/db_1/dbs/archive/
+
+-- verificar se o banco esta down, verificando se o processo pmon ainda esta sendo executado
+$ ps xau | grep pmon
+-- Copiando arquivos de REDO e CONTROLFILES E PFILE USANDO do banco Principal para o banco destino
+scp  -P 22 /u01/app/oracle/oradata/dbteste/redo* oracle@192.168.33.11:/u01/app/oracle/oradata/dbteste/
+scp  -P 22 /u01/app/oracle/oradata/dbteste/control* oracle@192.168.33.11:/u01/app/oracle/oradata/dbteste/
+scp  -P 22 /u01/app/oracle/product/12.2.0.1/db_1/dbs/initdbteste.ora oracle@192.168.33.11:/u01/app/oracle/product/12.2.0.1/db_1/dbs/initdbteste.ora
+
+
+--Aplica os archives gerado no banco PRINCIPAL(PRODUCAO) e enviados para destino(DR)
+
+$ rlwrap sqlplus / as sysdba
+SQL> STARTUP MOUNT;
+
+--RECOVER DOS ARCHIVES GERADOS NO BANCO PRINCIPAL(PRODUCAO) NO DESTINO(DR)
+$ rlwrap sqlplus / as sysdba
+SQL> set autorecovery on
+SQL> recover standby database using backup controlfile until cancel;
+
+--shutdown no banco destino
+$ sqlplus / as sysdba
+SQL> shutdown immediate;
+       
+--Sobe o banco Principal(PRODUCAO) em modo mount apontando para pfile copiado do banco Principal
+$ rlwrap sqlplus / as sysdba 
+SQL> startup mount;
+SQL> recover database;
+SQL> alter database open;
+
+
+
+============================================
+  -- SEGUNDA PARTE
+  -- PROMOVENDO O PRINCIPAL(PRODUCAO) COMO DR
+============================================
+Anotação: nessa etapa o antigo banco Principal está desligado e banco destino está atualizado com os archives do Principal e aberto para escrita.
+
+-- CRIANDO O CONTROLFILE standby NO BANCO DESTINO(DR)
+
+$ sqlplus / as sysdba 
+SQL> alter database create standby controlfile as '/home/oracle/control_standby01.ctl';
+SQL> alter system switch logfile;
+
+--- COPIANDO O CONTROLFILE STANDBY DO DESTINO(DR) PARA ANTIGO PRINCIPAL(PRODUCAO), POIS O MESMO AGORA SERÁ TRANSFORMANDO EM STANDBY
+$ scp  -P 22 /home/oracle/control_standby01.ctl oracle@192.168.33.10:/u01/app/oracle/product/12.2.0.1/db_1/dbs
+
+-- COPIANDO OS ARCHIVES GERADOS NO DESTINO(DR) PARA O ANTIGO PRINCIPAL(PRODUCAO)
+$ scp  -P 22 /u01/app/oracle/product/12.2.0.1/db_1/dbs/archive/1_111_1045517514.dbf oracle@192.168.33.10:/u01/app/oracle/product/12.2.0.1/db_1/dbs/archive
+$ scp  -P 22 /u01/app/oracle/product/12.2.0.1/db_1/dbs/archive/1_112_1045517514.dbf oracle@192.168.33.10:/u01/app/oracle/product/12.2.0.1/db_1/dbs/archive
+
+-- passo opcional, eh criar um copia do controfile standby gerado no destino(DR) devido que o controlfile pode corromper
+$ cp /u01/app/oracle/product/12.2.0.1/db_1/dbs/control_standby01.ctl /u01/app/oracle/product/12.2.0.1/db_1/dbs/control_standby02.ctl
+
+--editar o pfile do ANTIGO banco Principal(PRODUCAO) apontando os dois controlfile standby
+
+$ vi inidbteste.ora
+$ control_files='/u01/app/oracle/product/12.2.0.1/db_1/dbs/control_standby01.ctl','/u01/app/oracle/product/12.2.0.1/db_1/dbs/control_standby02.ctl'
+
+-- SOBE O ANTIGO BANCO PRINCIPAL(PRODUCAO) EM MODO MOUNT APONTANDO PARA PFILE EDITADO
+$ rlwrap sqlplus / as sysdba 
+SQL> startup mount;
+
+
+--RECOVER DOS ARCHIVES GERADOS NO BANCO DESTINO(DR) NO ANTIGO PRINCIPAL(PRODUCAO)
+$ rlwrap sqlplus / as sysdba
+SQL> set autorecovery on
+SQL> recover standby database using backup controlfile until cancel;
+
+
+-- VERIFICAR SE OS DOIS BANCOS ESTAO NA MESMA SEQUENCIA DE ARCHIVES
+
+SQL> SELECT ULTIMO_ARCH_STANDBY FROM (SELECT  MAX(SEQUENCE#) ULTIMO_ARCH_STANDBY FROM V$LOG_HISTORY GROUP BY RESETLOGS_TIME ORDER BY RESETLOGS_TIME DESC) WHERE ROWNUM <= 1;
+
+
+
