@@ -15,7 +15,7 @@ py_files = glob.glob(r'C:\python\arquivos/*.trm')
 ###loop para os arquivos de logs
 for py_file in py_files:
     var_arquivo = py_file
-    if os.stat(var_arquivo).st_mtime > (now - 86600) and os.path.isfile(var_arquivo):
+    if os.stat(var_arquivo).st_mtime < (now - 604800) and os.path.isfile(var_arquivo):
         os.remove(var_arquivo)
         var_arquivo = var_arquivo + "\n"
         arquivo_log.write(var_arquivo)
