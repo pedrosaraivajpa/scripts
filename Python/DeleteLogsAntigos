@@ -2,7 +2,9 @@ import os
 import glob
 import time
 import datetime
-
+'''
+Scripts Criado para deletar arquivos por externsao, baseando em periodo de tempo, o scripts abaixo arquivos com extensao .trm com mais de 7 dias.
+'''
 #pega o dia de hoje
 var_dia_executado = datetime.date.today()
 # pega a hora em segundos
