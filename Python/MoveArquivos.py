@@ -16,7 +16,7 @@ if os.path.exists(r"C:\python\routine-move-files-logs-to-homolog.loc"):
 else:
     var_exits = open(r"C:\python\routine-move-files-logs-to-homolog" + ".loc", "w")
     var_exits.close()
-    arquivo_log = open(r"C:\python\logs/logExecucao_" + str(var_dia_executado) + ".txt", "w")
+    arquivo_log = open(r"C:\python\logs/logExecucao_" + str(var_dia_executado) + ".txt", "a")
     arquivo_log.write("Inicio da Rotina " + str(var_hora_executado) + "\n")
     source = r'C:\arquivos'
     destination = r'C:\arquivos2'
