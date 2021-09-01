@@ -4,4 +4,5 @@
 [![Linkedin Badge](https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/fagnerpsantos/)](https://www.linkedin.com/in/pedro-saraiva-9222b28a/)
 
 ### Um pouco sobre mim
-Sou Administrador de Bancos de Dados
+Sou Administrador de Bancos de Dados. 
+Esse repositorio contem scripts que criei, que tive contato no meu trabalho ou que encontrei em algum blog na internet que me ajudaram de alguma forma.
