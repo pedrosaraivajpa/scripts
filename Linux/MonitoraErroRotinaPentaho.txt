@@ -34,7 +34,7 @@ done < /home/pentaho/scripts/log/jobsComErro-${DATA}.log
 
   ##SOH ENVIA EMAIL SE A VARIAVEL FOR DIFERENTE DE VAZIO
   if [ ! -z "/home/pentaho/scripts/log/jobsComErroEmail.log" ]; then
-   /home/pentaho/scripts/SnakeMail.py -H "zimbra.email.com.br" -p 25 -f ti@email.com.br -t "ti.dba@email.com.br" -u "JOBS DO CRONTAB PENTAHO COM ERRO ${DATA} " -x "/home/pentaho/scripts/log/jobsComErroEmail-${DATA}.log" -m "Segue os JOBS agendados na crontab que tiveram erro."
+   /home/pentaho/scripts/SnakeMail.py -H "servidore-mail.email.com.br" -p 25 -f pedromarquessaraiva@outlook.com -t "pedromarquessaraiva@outlook.com" -u "JOBS DO CRONTAB PENTAHO COM ERRO ${DATA} " -x "/home/pentaho/scripts/log/jobsComErroEmail-${DATA}.log" -m "Segue os JOBS agendados na crontab que tiveram erro."
    fi
 
 ##APAGA OS ARQUIVOS UTILIZADOS
