@@ -17,5 +17,5 @@ echo "$ALERTA" > /home/pentaho/scripts/logCrontab/logCron.txt
   if [ ! -z "$ALERTA" ]; then
   echo "ENTREI NA CONDICAO"
 
-  /home/pentaho/scripts/SnakeMail.py -H "zimbra.email.com.br" -p 25 -f ti@email.com.br -t "ti.dba@email.com.br" -u "ALERTA DE ERRO DO LOG DO CRON DIA ${DATA} " -x "/home/pentaho/scripts/logCrontab/logCron.txt" -m "Segue o alerta de erro do log cron em anexo."
+  /home/pentaho/scripts/SnakeMail.py -H "servidor de email" -p 25 -f pedromarquessaraiva@outlook.com -t "pedromarquessaraiva@outlook.com" -u "ALERTA DE ERRO DO LOG DO CRON DIA ${DATA} " -x "/home/pentaho/scripts/logCrontab/logCron.txt" -m "Segue o alerta de erro do log cron em anexo."
   fi
