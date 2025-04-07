@@ -5,4 +5,4 @@
 
 ### Um pouco sobre mim
 Sou Administrador de Bancos de Dados. 
-Esse Repositório contem scripts que criei, que tive contato no meu trabalho ou que encontrei em algum blog na internet que me ajudaram de alguma forma.
+Esse Repositório contem scripts que criei, que tive contato no meu trabalho ou que encontrei na internet que me ajudaram de alguma forma.
